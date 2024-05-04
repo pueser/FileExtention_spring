@@ -1,0 +1,14 @@
+<form th:action="@{|/fileUpload/extention|}" method="post" class="my-3">
+<table class="table">
+        <tr>
+            <th>제목</th>
+        </tr>
+        <tr >
+            <th>첨부파일</th>
+            <td>
+				<input type="file" name="uploadFile" accept='*' />
+				<input type="submit" value="upload" />
+            </td>
+        </tr>
+    </table>
+</form>
