@@ -50,26 +50,28 @@ public class FiileDownloadController {
 
             // ParagraphList 객체 생성
             Section paragraphList = hwpFile.getBodyText().getLastSection();
-        
+            
             // Add each paragraph to the PDDocument
+            PDPage page = new PDPage();
+            pdfDocument.addPage(page);
+            PDPageContentStream contentStream = new PDPageContentStream(pdfDocument, page);
+            float yPosition = 700; // 초기 y 위치 설정
             for (Paragraph paragraph : paragraphList) {
-                PDPage page = new PDPage();
-                pdfDocument.addPage(page);
-
-                PDPageContentStream contentStream = new PDPageContentStream(pdfDocument, page);
+            	
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA, 12);
-                contentStream.newLineAtOffset(50, 700);
+                contentStream.newLineAtOffset(50, yPosition);
                 contentStream.showText(paragraph.getText().getNormalString(0));
                 System.out.println("paragraph.getText() = "+paragraph.getText().getNormalString(0));
                 contentStream.endText();
-                contentStream.close();
+                yPosition -= 15; // 다음 문단을 위해 y 위치 조정
             }
 
+            //paragraphList.addNewParagraph(); // 문단 추가
+            contentStream.close();
             // Save the PDDocument
             pdfDocument.save("C:\\Users\\hwang\\OneDrive\\바탕 화면\\fileExtention_test files\\text.pdf");
             pdfDocument.close();
-            
             // 임시 파일 삭제
 	        tempFile.delete();
         } catch (IOException e) {
