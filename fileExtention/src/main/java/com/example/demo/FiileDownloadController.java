@@ -1,12 +1,13 @@
 package com.example.demo;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +15,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+
+
+
+import kr.dogfoot.hwplib.object.HWPFile;
+import kr.dogfoot.hwplib.object.bodytext.BodyText;
+import kr.dogfoot.hwplib.object.bodytext.Section;
+import kr.dogfoot.hwplib.object.bodytext.paragraph.Paragraph;
+import kr.dogfoot.hwplib.object.bodytext.paragraph.ParagraphList;
+import kr.dogfoot.hwplib.reader.HWPReader;
+import kr.dogfoot.hwplib.reader.bodytext.ForParagraphList;
 
 @Controller
 @RequestMapping("/fileDownload")
@@ -25,25 +36,49 @@ public class FiileDownloadController {
 	public ResponseEntity<byte[]> pdfChange(@RequestParam(value = "userfile")MultipartFile uploadFile) throws Exception{
 		 //Loading an existing document
 		System.out.println("/pdf/change 타기");
-		try (PDDocument document = PDDocument.load(uploadFile.getInputStream())) {
-	        PDPage page = document.getPage(0);
-	        try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-	            contentStream.beginText();
-	            contentStream.setFont(PDType1Font.TIMES_ROMAN, 12);
-	            contentStream.newLineAtOffset(25, 500);
-	            contentStream.showText("This is the sample document and we are adding content to it.");
-	            contentStream.endText();
-	        }
+		try {
+            // Load the HWP file
+			//MultipartFile을 임시File로 변환
+	        File tempFile = File.createTempFile("temp-file-name", null);
+	        uploadFile.transferTo(tempFile);
 
-	        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-	        document.save(outputStream);
-	        byte[] pdfBytes = outputStream.toByteArray();
+	        // File을 HWPFile로 변환
+	        HWPFile hwpFile = HWPReader.fromFile(tempFile);
 
-	        return ResponseEntity.ok()
-	                .contentType(MediaType.APPLICATION_PDF)
-	                .body(pdfBytes);
-	    }
+            // Create a new PDDocument
+            PDDocument pdfDocument = new PDDocument();
+
+            // ParagraphList 객체 생성
+            Section paragraphList = hwpFile.getBodyText().getLastSection();
+        
+            // Add each paragraph to the PDDocument
+            for (Paragraph paragraph : paragraphList) {
+                PDPage page = new PDPage();
+                pdfDocument.addPage(page);
+
+                PDPageContentStream contentStream = new PDPageContentStream(pdfDocument, page);
+                contentStream.beginText();
+                contentStream.setFont(PDType1Font.HELVETICA, 12);
+                contentStream.newLineAtOffset(50, 700);
+                contentStream.showText(paragraph.getText().getNormalString(0));
+                System.out.println("paragraph.getText() = "+paragraph.getText().getNormalString(0));
+                contentStream.endText();
+                contentStream.close();
+            }
+
+            // Save the PDDocument
+            pdfDocument.save("C:\\Users\\hwang\\OneDrive\\바탕 화면\\fileExtention_test files\\text.pdf");
+            pdfDocument.close();
+            
+            // 임시 파일 삭제
+	        tempFile.delete();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+		return null;
 	   }
+
+	
 	}
 
 
