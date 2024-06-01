@@ -8,6 +8,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -60,9 +61,11 @@ public class FiileDownloadController {
             	
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA, 12);
+                contentStream.setLeading(14.5f);//텍스트 행간 설정
                 contentStream.newLineAtOffset(50, yPosition);
                 contentStream.showText(paragraph.getText().getNormalString(0));
-                System.out.println("paragraph.getText() = "+paragraph.getText().getNormalString(0));
+                System.out.println("paragraph.getText() = "+paragraph.getText().getNormalString(0));// enter인식해서 한줄씩 출력
+                
                 contentStream.endText();
                 yPosition -= 15; // 다음 문단을 위해 y 위치 조정
             }
@@ -74,6 +77,10 @@ public class FiileDownloadController {
             pdfDocument.close();
             // 임시 파일 삭제
 	        tempFile.delete();
+	        
+	        //reutrn data(pdf)
+	        //ResponseEntity<byte[]> entity = new ResponseEntity<>(pdfBytes,header,HttpStatus.OK);//데이터, 헤더, 상태값
+	        return null;
         } catch (IOException e) {
             e.printStackTrace();
         }
