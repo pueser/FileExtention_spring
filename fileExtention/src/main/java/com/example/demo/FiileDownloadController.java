@@ -1,5 +1,6 @@
 package com.example.demo;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -37,6 +39,7 @@ public class FiileDownloadController {
 	public ResponseEntity<byte[]> pdfChange(@RequestParam(value = "userfile")MultipartFile uploadFile) throws Exception{
 		 //Loading an existing document
 		System.out.println("/pdf/change 타기");
+		String fileName = uploadFile.getOriginalFilename();
 		try {
             // Load the HWP file
 			//MultipartFile을 임시File로 변환
@@ -70,17 +73,31 @@ public class FiileDownloadController {
                 yPosition -= 15; // 다음 문단을 위해 y 위치 조정
             }
 
-            //paragraphList.addNewParagraph(); // 문단 추가
             contentStream.close();
-            // Save the PDDocument
-            pdfDocument.save("C:\\Users\\hwang\\OneDrive\\바탕 화면\\fileExtention_test files\\text.pdf");
-            pdfDocument.close();
-            // 임시 파일 삭제
+            
+     
+            //PDF 파일을 byte 배열로 저장
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            
+            //PDF 문서를 ByteArrayOutputStream에 저장
+            pdfDocument.save(baos);
+	        pdfDocument.close();
+	        
+	        //PDF 파일의 byte 배열을 가져온다
+	        byte[] pdfBytes = baos.toByteArray();
+	        // Close the ByteArrayOutputStream
+	        baos.close();
+	        
+	        //다운로드임을 명시
+	        HttpHeaders header = new HttpHeaders();
+	        header.add("Content-Disposition", "attachment; filename="+fileName);
+	        
+	        //임시 file 삭제
 	        tempFile.delete();
 	        
-	        //reutrn data(pdf)
-	        //ResponseEntity<byte[]> entity = new ResponseEntity<>(pdfBytes,header,HttpStatus.OK);//데이터, 헤더, 상태값
-	        return null;
+	     
+	        ResponseEntity<byte[]> entity = new ResponseEntity<>(pdfBytes,header,HttpStatus.OK);//데이터, 헤더, 상태값
+	        return entity;
         } catch (IOException e) {
             e.printStackTrace();
         }
