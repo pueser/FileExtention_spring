@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -54,6 +55,7 @@ public class FiileDownloadController {
         
 		String fileName = uploadFile.getOriginalFilename();
 		try {
+			
             // Load the HWP file
 			//MultipartFile을 임시File로 변환
 	        File tempFile = File.createTempFile("temp-file-name", null);
@@ -75,23 +77,35 @@ public class FiileDownloadController {
             pdfDocument.addPage(page);
             PDPageContentStream contentStream = new PDPageContentStream(pdfDocument, page);
             float yPosition = 700; // 초기 y 위치 설정
+            
             for (Paragraph paragraph : paragraphList) {
-            	
+                
+                //페이지 갯수 (줄의 세로 위치 파악, 0이면 페이지 추가)
+                ArrayList<LineSegItem> segitem = paragraph.getLineSeg().getLineSegItemList();//문단 레이아웃 파악
+                int addPage = segitem.get(0).getLineVerticalPosition();//문단 세로위치 파악
+                System.out.println("HWP addPage: " + addPage);
+                
+                if(yPosition <= 50 || addPage == 0) {
+                	// 이전 contentStream 닫기
+                    contentStream.close();
+                    
+                    // 새 페이지 추가
+                    page = new PDPage(PDRectangle.A4);
+                    pdfDocument.addPage(page);
+                    contentStream = new PDPageContentStream(pdfDocument, page);
+                    yPosition = 700; // y 위치 초기화
+                	
+                }
+                
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA, 12);
                 contentStream.setLeading(14.5f);//텍스트 행간 설정
                 contentStream.newLineAtOffset(50, yPosition);
-                contentStream.showText(paragraph.getText().getNormalString(0));
-                System.out.println("paragraph.getText() = "+paragraph.getText().getNormalString(0));// enter인식해서 한줄씩 출력
-                
-                contentStream.endText();
+            	contentStream.showText(paragraph.getText().getNormalString(0));//한 문장 입력
+            	
+            	System.out.println("paragraph.getText() = "+paragraph.getText().getNormalString(0));// enter인식해서 한줄씩 출력
+            	contentStream.endText();
                 yPosition -= 15; // 다음 문단을 위해 y 위치 조정
-                
-                
-                //문단의 레이아웃 (줄의 세로 위치 파악, 0이면 페이지 추가)
-                ArrayList<LineSegItem> segitem = paragraph.getLineSeg().getLineSegItemList();
-                System.out.println("HWP segitem: " + segitem.get(0).getLineVerticalPosition());
-              
                
 
             }
