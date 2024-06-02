@@ -24,8 +24,18 @@ import org.springframework.web.multipart.MultipartFile;
 import kr.dogfoot.hwplib.object.HWPFile;
 import kr.dogfoot.hwplib.object.bodytext.BodyText;
 import kr.dogfoot.hwplib.object.bodytext.Section;
+import kr.dogfoot.hwplib.object.bodytext.control.ControlSectionDefine;
+import kr.dogfoot.hwplib.object.bodytext.control.ctrlheader.CtrlHeaderFooter;
+import kr.dogfoot.hwplib.object.bodytext.control.ctrlheader.CtrlHeaderPageNumberPosition;
+import kr.dogfoot.hwplib.object.bodytext.control.ctrlheader.CtrlHeaderSectionDefine;
+import kr.dogfoot.hwplib.object.bodytext.control.ctrlheader.pagenumberposition.PageNumberPositionHeaderProperty;
+import kr.dogfoot.hwplib.object.bodytext.control.ctrlheader.pageoddevenadjust.PageOddEvenAdjustHeaderProperty;
+import kr.dogfoot.hwplib.object.bodytext.control.sectiondefine.BatangPageInfo;
 import kr.dogfoot.hwplib.object.bodytext.paragraph.Paragraph;
 import kr.dogfoot.hwplib.object.bodytext.paragraph.ParagraphList;
+import kr.dogfoot.hwplib.object.bodytext.paragraph.lineseg.LineSegItem;
+import kr.dogfoot.hwplib.object.bodytext.paragraph.text.ParaText;
+import kr.dogfoot.hwplib.object.docinfo.Numbering;
 import kr.dogfoot.hwplib.reader.HWPReader;
 import kr.dogfoot.hwplib.reader.bodytext.ForParagraphList;
 
@@ -39,6 +49,9 @@ public class FiileDownloadController {
 	public ResponseEntity<byte[]> pdfChange(@RequestParam(value = "userfile")MultipartFile uploadFile) throws Exception{
 		 //Loading an existing document
 		System.out.println("/pdf/change 타기");
+		
+		
+        
 		String fileName = uploadFile.getOriginalFilename();
 		try {
             // Load the HWP file
@@ -54,6 +67,8 @@ public class FiileDownloadController {
 
             // ParagraphList 객체 생성
             Section paragraphList = hwpFile.getBodyText().getLastSection();
+            
+            
             
             // Add each paragraph to the PDDocument
             PDPage page = new PDPage();
@@ -71,6 +86,14 @@ public class FiileDownloadController {
                 
                 contentStream.endText();
                 yPosition -= 15; // 다음 문단을 위해 y 위치 조정
+                
+                
+                //문단의 레이아웃 (줄의 세로 위치 파악, 0이면 페이지 추가)
+                ArrayList<LineSegItem> segitem = paragraph.getLineSeg().getLineSegItemList();
+                System.out.println("HWP segitem: " + segitem.get(0).getLineVerticalPosition());
+              
+               
+
             }
 
             contentStream.close();
@@ -94,6 +117,13 @@ public class FiileDownloadController {
 	        
 	        //임시 file 삭제
 	        tempFile.delete();
+	        
+	        
+	        
+            
+            //Section pageCount2 = hwpFile.getBodyText().getSectionList().get(3);
+            //Paragraph  p = pageCount2.getParagraph(0);
+            //System.out.println("HWP 파일의 페이지 수: " + p.getNormalString());//구역별 문장 얻기
 	        
 	     
 	        ResponseEntity<byte[]> entity = new ResponseEntity<>(pdfBytes,header,HttpStatus.OK);//데이터, 헤더, 상태값
