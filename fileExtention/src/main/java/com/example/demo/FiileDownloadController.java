@@ -78,6 +78,9 @@ public class FiileDownloadController {
             PDPageContentStream contentStream = new PDPageContentStream(pdfDocument, page);
             float yPosition = 700; // 초기 y 위치 설정
             
+            //첫 번째 문단인지 여부를 추적
+            boolean isFirstParagraph = true;
+            
             for (Paragraph paragraph : paragraphList) {
                 
                 //페이지 갯수 (줄의 세로 위치 파악, 0이면 페이지 추가)
@@ -85,12 +88,12 @@ public class FiileDownloadController {
                 int addPage = segitem.get(0).getLineVerticalPosition();//문단 세로위치 파악
                 System.out.println("HWP addPage: " + addPage);
                 
-                if(yPosition <= 50 || addPage == 0) {
+                if((yPosition <= 50 || addPage == 0) && !isFirstParagraph) {
                 	// 이전 contentStream 닫기
                     contentStream.close();
                     
                     // 새 페이지 추가
-                    page = new PDPage(PDRectangle.A4);
+                    page = new PDPage();
                     pdfDocument.addPage(page);
                     contentStream = new PDPageContentStream(pdfDocument, page);
                     yPosition = 700; // y 위치 초기화
@@ -107,6 +110,7 @@ public class FiileDownloadController {
             	contentStream.endText();
                 yPosition -= 15; // 다음 문단을 위해 y 위치 조정
                
+                isFirstParagraph = false;
 
             }
 
@@ -131,13 +135,7 @@ public class FiileDownloadController {
 	        
 	        //임시 file 삭제
 	        tempFile.delete();
-	        
-	        
-	        
-            
-            //Section pageCount2 = hwpFile.getBodyText().getSectionList().get(3);
-            //Paragraph  p = pageCount2.getParagraph(0);
-            //System.out.println("HWP 파일의 페이지 수: " + p.getNormalString());//구역별 문장 얻기
+	      
 	        
 	     
 	        ResponseEntity<byte[]> entity = new ResponseEntity<>(pdfBytes,header,HttpStatus.OK);//데이터, 헤더, 상태값
