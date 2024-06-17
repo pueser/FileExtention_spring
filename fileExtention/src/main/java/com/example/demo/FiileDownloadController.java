@@ -42,8 +42,11 @@ import kr.dogfoot.hwplib.reader.bodytext.ForParagraphList;
 
 @Controller
 @RequestMapping("/fileDownload")
+//hwp to pdf
+//pdf파일 생성하여 text를 옮기는 로직
 public class FiileDownloadController {
 	
+	FilePageSettings pageSet = new FilePageSettings();//hwp 파일 용지 설정정보
 	
 	@PostMapping("/pdf")
 	@ResponseBody
@@ -88,11 +91,12 @@ public class FiileDownloadController {
                 int addPage = segitem.get(0).getLineVerticalPosition();//문단 세로위치 파악
                 System.out.println("HWP addPage: " + addPage);
                 
+                //yPosition이 페이지 하단에 도달했거나 addPage가 0이고 첫 번째 문단이 아닐 때 새 페이지 추가
                 if((yPosition <= 50 || addPage == 0) && !isFirstParagraph) {
-                	// 이전 contentStream 닫기
+                	//이전 contentStream 닫기
                     contentStream.close();
                     
-                    // 새 페이지 추가
+                    //새 페이지 추가
                     page = new PDPage();
                     pdfDocument.addPage(page);
                     contentStream = new PDPageContentStream(pdfDocument, page);
@@ -146,6 +150,15 @@ public class FiileDownloadController {
 		return null;
 	   }
 
+	
+	
+		//추상 메서드용
+		@PostMapping("/hwp/information")
+		@ResponseBody
+		public MultipartFile hwpInfo(@RequestParam(value = "userfile")MultipartFile uploadFile) throws Exception{
+			System.out.println("추상메서드용 ");
+			return uploadFile;
+		}
 	
 	}
 
